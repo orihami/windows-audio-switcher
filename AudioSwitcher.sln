@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DFE94AE0-E7C8-4CBB-9D70-F909F00D28CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSwitcher.Core", "src\AudioSwitcher.Core\AudioSwitcher.Core.csproj", "{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E40C394C-5972-43DF-B312-6783745A3624}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSwitcher.Core.Tests", "tests\AudioSwitcher.Core.Tests\AudioSwitcher.Core.Tests.csproj", "{0084699E-9EE0-4F59-BADC-09F83C6499FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioSwitcher.App", "src\AudioSwitcher.App\AudioSwitcher.App.csproj", "{9195BDD7-163D-45BA-AE88-AD3F86A7D22B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0084699E-9EE0-4F59-BADC-09F83C6499FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0084699E-9EE0-4F59-BADC-09F83C6499FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0084699E-9EE0-4F59-BADC-09F83C6499FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0084699E-9EE0-4F59-BADC-09F83C6499FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9195BDD7-163D-45BA-AE88-AD3F86A7D22B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9195BDD7-163D-45BA-AE88-AD3F86A7D22B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9195BDD7-163D-45BA-AE88-AD3F86A7D22B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9195BDD7-163D-45BA-AE88-AD3F86A7D22B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0396FDE5-B785-4FC5-AB4C-1F5A56DE46A5} = {DFE94AE0-E7C8-4CBB-9D70-F909F00D28CE}
+		{0084699E-9EE0-4F59-BADC-09F83C6499FF} = {E40C394C-5972-43DF-B312-6783745A3624}
+		{9195BDD7-163D-45BA-AE88-AD3F86A7D22B} = {DFE94AE0-E7C8-4CBB-9D70-F909F00D28CE}
+	EndGlobalSection
+EndGlobal

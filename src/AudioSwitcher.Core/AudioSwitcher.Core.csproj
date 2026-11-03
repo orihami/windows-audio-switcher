@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows に依存しない中身(切り替え順・ショートカットの判定・設定・表示位置)。Linux でもテストできる -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AudioSwitcher.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

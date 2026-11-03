@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- ko-pi(Linux)でもビルドの確認ができるように -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>AudioSwitcher</AssemblyName>
+    <RootNamespace>AudioSwitcher.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Version>0.1.0</Version>
+    <Product>Windows Audio Switcher</Product>
+    <Description>ショートカットキーとマウスホイールで音声の出力先を切り替える</Description>
+    <SatelliteResourceLanguages>ja</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../AudioSwitcher.Core/AudioSwitcher.Core.csproj" />
+    <Resource Include="app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- WPF と WinForms の名前がぶつからないように、WinForms は必要なところで名前つきで使う -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+</Project>

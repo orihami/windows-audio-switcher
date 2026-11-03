@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: 中身のテスト(切り替え順・ショートカット・設定)
+        run: dotnet test tests/AudioSwitcher.Core.Tests -c Release
+      - name: exe を作る(1ファイル・.NET を入れなくても動く)
+        run: >
+          dotnet publish src/AudioSwitcher.App/AudioSwitcher.App.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+          -o out
+      - name: 起動の確認(Windows の出力デバイスを読む)
+        shell: pwsh
+        run: |
+          $p = Start-Process out/AudioSwitcher.exe -ArgumentList '--self-test' -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "self-test failed: $($p.ExitCode)" }
+      - name: 画面の見た目を画像にする
+        shell: pwsh
+        run: |
+          $p = Start-Process out/AudioSwitcher.exe -ArgumentList '--render-preview','preview' -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "preview failed: $($p.ExitCode)" }
+          Get-ChildItem preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview
+          path: preview/
+          retention-days: 14
+      - name: 配る形にまとめる
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item out/AudioSwitcher.exe dist/
+          Copy-Item README.md dist/README.md
+          Compress-Archive -Path dist/* -DestinationPath AudioSwitcher-win-x64.zip
+          (Get-FileHash out/AudioSwitcher.exe -Algorithm SHA256).Hash | Out-File -Encoding ascii dist/AudioSwitcher.exe.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AudioSwitcher
+          path: |
+            out/AudioSwitcher.exe
+            AudioSwitcher-win-x64.zip
+          retention-days: 14
+      - name: Release(タグのとき)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create $env:GITHUB_REF_NAME out/AudioSwitcher.exe AudioSwitcher-win-x64.zip dist/AudioSwitcher.exe.sha256 --title "Windows Audio Switcher $env:GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
