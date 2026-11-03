@@ -30,6 +30,7 @@ jobs:
         shell: pwsh
         run: |
           $p = Start-Process out/AudioSwitcher.exe -ArgumentList '--self-test' -Wait -PassThru -NoNewWindow
+          Get-Content self-test.txt -Encoding utf8
           if ($p.ExitCode -ne 0) { throw "self-test failed: $($p.ExitCode)" }
       - name: 画面の見た目を画像にする
         shell: pwsh

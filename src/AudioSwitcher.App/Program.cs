@@ -270,24 +270,27 @@ public sealed class Program : IAppHost
 
     // ---- 確認用 ----
 
-    /// <summary>Windows のデバイスを読めるかだけ確かめる(CI 用)。</summary>
+    /// <summary>Windows のデバイスを読めるかだけ確かめる(CI 用)。結果は self-test.txt(UTF-8)にも書く。</summary>
     static int SelfTest()
     {
+        var lines = new List<string>();
+        int code = 0;
         try
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
             var app = new Application();
             var audio = new AudioService(app.Dispatcher);
             var list = audio.GetDevices();
-            Console.WriteLine($"self-test: 出力デバイス {list.Count} 個、既定 {(audio.GetDefaultId() ?? "なし")}");
-            foreach (var d in list) Console.WriteLine($"  {(d.Connected ? "●" : "○")} {d.Name} [{audio.KindOf(d.Id)}]");
+            lines.Add($"self-test: 出力デバイス {list.Count} 個、既定 {(audio.GetDefaultId() ?? "なし")}");
+            foreach (var d in list) lines.Add($"  {(d.Connected ? "●" : "○")} {d.Name} [{audio.KindOf(d.Id)}]");
             audio.Dispose();
-            return 0;
         }
         catch (Exception e)
         {
-            Console.WriteLine("self-test 失敗: " + e);
-            return 1;
+            lines.Add("self-test 失敗: " + e);
+            code = 1;
         }
+        File.WriteAllLines("self-test.txt", lines, System.Text.Encoding.UTF8);
+        foreach (var l in lines) Console.WriteLine(l);
+        return code;
     }
 }
