@@ -275,6 +275,7 @@ public sealed class Program : IAppHost
     {
         try
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             var app = new Application();
             var audio = new AudioService(app.Dispatcher);
             var list = audio.GetDevices();

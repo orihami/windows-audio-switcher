@@ -97,7 +97,8 @@ public static class Preview
     {
         if (el == null) return;
         // ウィンドウから外して、決まった大きさで描く
-        if (el.Parent is System.Windows.Controls.ContentControl cc) cc.Content = null;
+        var owner = el.Parent as System.Windows.Controls.ContentControl;
+        if (owner != null) owner.Content = null;
         var size = new Size(double.IsNaN(w) ? double.PositiveInfinity : w, double.IsNaN(h) ? double.PositiveInfinity : h);
         el.Measure(size);
         var ds = el.DesiredSize;
@@ -116,7 +117,8 @@ public static class Preview
         bmp.Render(dv);
         var enc = new PngBitmapEncoder();
         enc.Frames.Add(BitmapFrame.Create(bmp));
-        using var f = File.Create(path);
-        enc.Save(f);
+        using (var f = File.Create(path)) enc.Save(f);
+        // ウィンドウにもどす(次の画像でも使う)
+        if (owner != null) owner.Content = el;
     }
 }

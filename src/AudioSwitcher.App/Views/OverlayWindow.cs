@@ -170,6 +170,15 @@ public sealed class OverlayWindow : Window
         Top = y;
     }
 
+    // 「🔊 使用中」(アイコンの字と日本語は別のフォントなので分けて並べる)
+    UIElement BadgeContent()
+    {
+        var sp = new StackPanel { Orientation = Orientation.Horizontal };
+        sp.Children.Add(new TextBlock { Text = Glyphs.Volume, FontFamily = Palette.Icons, FontSize = 11, Foreground = _p.AccentText, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+        sp.Children.Add(new TextBlock { Text = "使用中", FontSize = 11, Foreground = _p.AccentText, VerticalAlignment = VerticalAlignment.Center });
+        return sp;
+    }
+
     /// <summary>1行: [選択の印][アイコン][名前・状態][使用中]</summary>
     UIElement Row(DeviceEntry d, FormFactor kind, bool current, bool selected)
     {
@@ -187,9 +196,7 @@ public sealed class OverlayWindow : Window
         };
         var names = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(2, 4, 8, 4) };
         names.Children.Add(new TextBlock { Text = d.Label, FontSize = 14, FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal, Foreground = _p.Text, TextTrimming = TextTrimming.CharacterEllipsis });
-        string sub = !d.Connected ? "未接続" : current ? "使用中" : "";
-        if (sub != "")
-            names.Children.Add(new TextBlock { Text = sub, FontSize = 11.5, Foreground = current && d.Connected ? _p.AccentText : _p.SubText });
+        if (!d.Connected) names.Children.Add(new TextBlock { Text = "未接続", FontSize = 11.5, Foreground = _p.SubText });
         Grid.SetColumn(bar, 0);
         Grid.SetColumn(icon, 1);
         Grid.SetColumn(names, 2);
@@ -203,7 +210,7 @@ public sealed class OverlayWindow : Window
             {
                 CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center,
                 BorderBrush = _p.AccentText, BorderThickness = new Thickness(1),
-                Child = new TextBlock { Text = Glyphs.Volume + " 使用中", FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets, " + Palette.Font.Source), FontSize = 11, Foreground = _p.AccentText },
+                Child = BadgeContent(),
             };
             Grid.SetColumn(badge, 3);
             g.Children.Add(badge);

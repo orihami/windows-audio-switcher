@@ -75,7 +75,7 @@ public sealed class SettingsWindow : Window
         root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
         // 左: アプリ名と項目
-        var left = new DockPanel { Margin = new Thickness(12, 16, 8, 12) };
+        var left = new DockPanel { Margin = new Thickness(12, 28, 8, 12) };
         var brand = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(8, 0, 0, 16) };
         var img = new System.Windows.Controls.Image { Width = 28, Height = 28, Margin = new Thickness(0, 0, 10, 0) };
         try { img.Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/app.ico")); } catch { }
@@ -108,7 +108,7 @@ public sealed class SettingsWindow : Window
         left.Children.Add(_nav);
         root.Children.Add(left);
 
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = _page, Padding = new Thickness(8, 8, 24, 24) };
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = _page, Padding = new Thickness(8, 20, 24, 24) };
         Grid.SetColumn(scroll, 1);
         root.Children.Add(scroll);
         Content = root;
@@ -231,12 +231,12 @@ public sealed class SettingsWindow : Window
 
         panel.Children.Add(Ui.Header(_p, "ホイール"));
         panel.Children.Add(Ui.Row(_p, Glyphs.Mouse, "ホイールの向き", "どちらに回すとリストの次(下)へ進むか",
-            Ui.Combo(_p, new[] { "下に回すと次へ(リストの下へ)", "上に回すと次へ" }, S.InvertWheel ? 1 : 0, i => { S.InvertWheel = i == 1; Changed(); })));
+            Ui.Choice(_p, new[] { "下に回すと次へ", "上に回すと次へ" }, S.InvertWheel ? 1 : 0, i => { S.InvertWheel = i == 1; Changed(); ShowPage("keys"); })));
         panel.Children.Add(Ui.Row(_p, Glyphs.Order, "循環する", "最後の次は最初へ、最初の前は最後へもどる", Ui.Toggle(_p, S.Wrap, v => { S.Wrap = v; Changed(); })));
 
         panel.Children.Add(Ui.Header(_p, "切り替え"));
         panel.Children.Add(Ui.Row(_p, Glyphs.Volume, "切り替える用途", "Windows の「既定のデバイス」と「既定の通信デバイス」",
-            Ui.Combo(_p, new[] { "すべて(音楽・動画・通話)", "通話用はそのままにする" }, S.Roles == SwitchRoles.All ? 0 : 1, i => { S.Roles = i == 0 ? SwitchRoles.All : SwitchRoles.MediaOnly; Changed(); })));
+            Ui.Choice(_p, new[] { "すべて(音楽・動画・通話)", "通話用はそのまま" }, S.Roles == SwitchRoles.All ? 0 : 1, i => { S.Roles = i == 0 ? SwitchRoles.All : SwitchRoles.MediaOnly; Changed(); ShowPage("keys"); })));
         panel.Children.Add(Ui.Row(_p, Glyphs.Power, "一時停止", "オンのあいだはショートカットに反応しません(タスクトレイからも切り替えられます)", Ui.Toggle(_p, S.Paused, v => { S.Paused = v; Changed(); })));
     }
 
@@ -258,20 +258,20 @@ public sealed class SettingsWindow : Window
         if (list.Count == 0) panel.Children.Add(Ui.Card(_p, Ui.Text("まだ登録がありません。下の「追加」から選んでください。", 13, _p.SubText)));
         for (int i = 0; i < list.Count; i++) panel.Children.Add(DeviceRow(list, i));
 
-        panel.Children.Add(Ui.Header(_p, "追加する"));
+        panel.Children.Add(Ui.Header(_p, "追加する(Windows の出力デバイス)"));
         var cand = DeviceRegistry.Unregistered(list, _host.SystemDevices);
-        var pick = Ui.Combo(_p, cand.Select(c => (c.Connected ? "● " : "○ ") + c.Name + (c.Connected ? "" : "(未接続)")), cand.Count > 0 ? 0 : -1, _ => { }, 330);
-        var add = new StackPanel { Orientation = Orientation.Horizontal };
-        add.Children.Add(pick);
-        add.Children.Add(new Border { Width = 8 });
-        add.Children.Add(Ui.Button(_p, "追加", () =>
+        if (cand.Count == 0) panel.Children.Add(Ui.Card(_p, Ui.Text("Windows が知っている出力デバイスは、全部登録ずみです。", 13, _p.SubText)));
+        foreach (var c in cand)
         {
-            if (pick.SelectedIndex < 0 || pick.SelectedIndex >= cand.Count) return;
-            DeviceRegistry.Add(list, cand[pick.SelectedIndex]);
-            Changed("追加しました");
-            ShowPage("devices");
-        }, Glyphs.Add, accent: true));
-        panel.Children.Add(Ui.Row(_p, Glyphs.Add, "Windows の出力デバイスから選ぶ", cand.Count == 0 ? "Windows が知っている出力デバイスは、全部登録ずみです" : $"登録していないもの {cand.Count}個", cand.Count == 0 ? null : add));
+            var dev = c;
+            var add = Ui.Button(_p, "追加", () =>
+            {
+                DeviceRegistry.Add(list, dev);
+                Changed("追加しました");
+                ShowPage("devices");
+            }, Glyphs.Add, accent: true);
+            panel.Children.Add(Ui.Row(_p, Glyphs.For(_host.KindOf(dev.Id)), dev.Name, dev.Connected ? "● 接続中" : "○ 未接続(登録しておけば、つないだときに選べます)", add));
+        }
     }
 
     UIElement DeviceRow(List<DeviceEntry> list, int i)
@@ -366,8 +366,8 @@ public sealed class SettingsWindow : Window
         sc.Children.Add(scaleText);
         panel.Children.Add(Ui.Row(_p, Glyphs.Display, "大きさ", null, sc));
 
-        var corners = new[] { "右下(時計・通知領域の上)", "左下", "右上", "左上", "画面の中央" };
-        panel.Children.Add(Ui.Row(_p, Glyphs.Display, "表示する位置", "タスクバーにかからない場所に出します", Ui.Combo(_p, corners, (int)S.Corner, i => { S.Corner = (OverlayCorner)i; Changed(); })));
+        var corners = new[] { "右下(時計の上)", "左下", "右上", "左上", "中央" };
+        panel.Children.Add(Ui.Row(_p, Glyphs.Display, "表示する位置", "タスクバーにかからない場所に出します", Ui.Choice(_p, corners, (int)S.Corner, i => { S.Corner = (OverlayCorner)i; Changed(); ShowPage("display"); })));
         var margin = new Slider { Minimum = 0, Maximum = 120, Value = S.Margin, Width = 200, TickFrequency = 4, IsSnapToTickEnabled = true, VerticalAlignment = VerticalAlignment.Center };
         var marginText = Ui.Text($"{S.Margin:0}", 13, _p.Text, margin: new Thickness(8, 0, 0, 0));
         margin.ValueChanged += (_, e) => marginText.Text = $"{e.NewValue:0}";
@@ -377,7 +377,7 @@ public sealed class SettingsWindow : Window
         mg.Children.Add(marginText);
         panel.Children.Add(Ui.Row(_p, Glyphs.Display, "画面の端からのすきま", null, mg));
         panel.Children.Add(Ui.Row(_p, Glyphs.Display, "外観", "選択UIと設定画面の色",
-            Ui.Combo(_p, new[] { "Windows の設定に合わせる", "ダーク", "ライト" }, (int)S.Theme, i =>
+            Ui.Choice(_p, new[] { "Windows に合わせる", "ダーク", "ライト" }, (int)S.Theme, i =>
             {
                 S.Theme = (ThemeMode)i;
                 Changed();

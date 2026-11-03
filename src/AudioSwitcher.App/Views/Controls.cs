@@ -138,12 +138,20 @@ public static class Ui
         return b;
     }
 
-    public static ComboBox Combo(Palette p, IEnumerable<string> items, int selected, Action<int> changed, double width = 260)
+    /// <summary>
+    /// 選択肢を横に並べたボタン(選んでいるものに色)。ドロップダウンの代わり(Windows の既定の見た目はダークで浮くため)。
+    /// 押したら changed を呼ぶ(呼んだ側でページを描き直して色を付け直す)。
+    /// </summary>
+    public static WrapPanel Choice(Palette p, IList<string> items, int selected, Action<int> changed)
     {
-        var c = new ComboBox { Width = width, FontSize = 13, MinHeight = 32, VerticalContentAlignment = VerticalAlignment.Center };
-        foreach (var s in items) c.Items.Add(s);
-        c.SelectedIndex = selected;
-        c.SelectionChanged += (_, _) => { if (c.SelectedIndex >= 0) changed(c.SelectedIndex); };
-        return c;
+        var wrap = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Right, MaxWidth = 430 };
+        for (int i = 0; i < items.Count; i++)
+        {
+            int k = i;
+            var b = Button(p, items[i], () => { if (k != selected) changed(k); }, accent: i == selected);
+            b.Margin = new Thickness(4, 2, 0, 2);
+            wrap.Children.Add(b);
+        }
+        return wrap;
     }
 }
