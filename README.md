@@ -1,5 +1,7 @@
 # Windows Audio Switcher
 
+**ダウンロード(最新版)**: https://github.com/orihami/windows-audio-switcher/releases/latest/download/AudioSwitcher.exe （このリポジトリは非公開なので、GitHub にログインした状態で開く）
+
 ショートカットキーを押したままマウスホイールを回して、Windows の音声の出力先(モニター・イヤホン・スピーカーなど)をすばやく切り替える常駐アプリです。
 
 ## 使い方
