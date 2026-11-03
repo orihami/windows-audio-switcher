@@ -80,21 +80,21 @@ public static class Preview
             ov.ShowResult(s.Selected!, host.KindOf(s.Selected!.Id), true, host.Settings);
             Save(ov.Content as FrameworkElement, Path.Combine(dir, $"overlay-3-result-{tag}.png"), Background(theme));
 
-            // 紹介動画用: ホイールを1段ずつ回したときの場面(A → C(B は未接続なので飛ばす) → 有線 → 循環してモニター)
+            // 紹介動画用(背景は透明。動画のデスクトップに重ねる): ホイールを1段ずつ回したときの場面(A → C(B は未接続なので飛ばす) → 有線 → 循環してモニター)
             var v = new SelectionSession(host.Settings.Devices, host.CurrentId, true);
             ov.Render(v, host.Settings, host.KindOf, host.Settings.Hotkey.ToString());
-            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-0-{tag}.png"), Background(theme));
+            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-0-{tag}.png"), Colors.Transparent);
             for (int k = 1; k <= 4; k++)
             {
                 v.Step(1);
                 ov.Render(v, host.Settings, host.KindOf, host.Settings.Hotkey.ToString());
-                Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-{k}-{tag}.png"), Background(theme));
+                Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-{k}-{tag}.png"), Colors.Transparent);
             }
             v.Step(-2); // 有線 → C へもどる
             ov.Render(v, host.Settings, host.KindOf, host.Settings.Hotkey.ToString());
-            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-5-{tag}.png"), Background(theme));
+            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-5-{tag}.png"), Colors.Transparent);
             ov.ShowResult(v.Selected!, host.KindOf(v.Selected!.Id), true, host.Settings);
-            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-6-{tag}.png"), Background(theme));
+            Save(ov.Content as FrameworkElement, Path.Combine(dir, $"video-6-{tag}.png"), Colors.Transparent);
 
             var win = new SettingsWindow(host);
             foreach (var page in new[] { "keys", "devices", "display", "app" })
