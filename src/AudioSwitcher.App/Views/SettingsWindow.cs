@@ -161,6 +161,8 @@ public sealed class SettingsWindow : Window
     public void ShowPage(string id)
     {
         _current = id;
+        int ni = Array.FindIndex(Pages, x => x.Id == id);
+        if (_nav.SelectedIndex != ni) _nav.SelectedIndex = ni;
         var panel = new StackPanel { MaxWidth = 760, HorizontalAlignment = HorizontalAlignment.Stretch };
         var title = Pages.First(x => x.Id == id).Name;
         panel.Children.Add(Ui.Text(title, 26, _p.Text, FontWeights.SemiBold, new Thickness(2, 8, 0, 8)));

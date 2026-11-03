@@ -6,12 +6,16 @@ namespace AudioSwitcher.App.Services;
 
 /// <summary>
 /// キーボードとマウスの低レベルフック。ショートカットを押している間だけホイールを横取りする(ほかのアプリには渡さない)。
-/// フックの中は速く終わらせる(遅いと Windows にフックを外される)。重い処理は UI のスレッドへ回す。
+/// フックは専用のスレッドで受ける(画面の描画で UI のスレッドが少し止まっても、Windows にフックを外されないように)。
+/// 判定はそのスレッドで行い、結果だけ UI のスレッドへ送る。
 /// </summary>
 public sealed class InputHook : IDisposable
 {
     readonly Native.HookProc _kbProc, _mouseProc; // GC に回収されないよう持っておく
     IntPtr _kb, _mouse;
+    readonly object _gate = new();
+    readonly Thread _thread;
+    uint _threadId;
     readonly HotkeyTracker _tracker;
     readonly System.Windows.Threading.Dispatcher _ui;
     bool _usedWheel;
@@ -26,43 +30,83 @@ public sealed class InputHook : IDisposable
     /// <summary>ショートカットを離した(cancelled=true なら別のキーと組み合わせて使われたので切り替えない)。</summary>
     public event Action<bool>? Released;
 
-    public bool Enabled { get; set; } = true;
-    public bool InvertWheel { get; set; }
+    public volatile bool Enabled = true;
+    public volatile bool InvertWheel;
     readonly WheelAccumulator _wheel = new();
 
     public InputHook(Hotkey hotkey, System.Windows.Threading.Dispatcher ui)
     {
         _tracker = new HotkeyTracker(hotkey);
         _ui = ui;
-        _kbProc = KeyboardProc;
-        _mouseProc = MouseProc;
-        var mod = Native.GetModuleHandle(null);
-        _kb = Native.SetWindowsHookEx(Native.WH_KEYBOARD_LL, _kbProc, mod, 0);
-        _mouse = Native.SetWindowsHookEx(Native.WH_MOUSE_LL, _mouseProc, mod, 0);
-        if (_kb == IntPtr.Zero || _mouse == IntPtr.Zero) Log.Write($"フックを付けられない: {Marshal.GetLastWin32Error()}");
+        _kbProc = (c, w, l) => { lock (_gate) return KeyboardProc(c, w, l); };
+        _mouseProc = (c, w, l) => { lock (_gate) return MouseProc(c, w, l); };
+        var ready = new ManualResetEventSlim();
+        _thread = new Thread(() =>
+        {
+            _threadId = Native.GetCurrentThreadId();
+            var mod = Native.GetModuleHandle(null);
+            _kb = Native.SetWindowsHookEx(Native.WH_KEYBOARD_LL, _kbProc, mod, 0);
+            _mouse = Native.SetWindowsHookEx(Native.WH_MOUSE_LL, _mouseProc, mod, 0);
+            if (_kb == IntPtr.Zero || _mouse == IntPtr.Zero) Log.Write($"フックを付けられない: {Marshal.GetLastWin32Error()}");
+            ready.Set();
+            // フックはこのスレッドのメッセージを回している間に呼ばれる
+            while (Native.GetMessage(out var msg, IntPtr.Zero, 0, 0) > 0)
+            {
+                Native.TranslateMessage(ref msg);
+                Native.DispatchMessage(ref msg);
+            }
+            if (_kb != IntPtr.Zero) Native.UnhookWindowsHookEx(_kb);
+            if (_mouse != IntPtr.Zero) Native.UnhookWindowsHookEx(_mouse);
+            _kb = _mouse = IntPtr.Zero;
+        }) { IsBackground = true, Name = "InputHook", Priority = ThreadPriority.AboveNormal };
+        _thread.Start();
+        ready.Wait(3000);
     }
 
     public Hotkey Hotkey
     {
-        get => _tracker.Hotkey;
+        get { lock (_gate) return _tracker.Hotkey; }
         set
         {
-            _tracker.Hotkey = value;
+            lock (_gate)
+            {
+                _tracker.Hotkey = value.Clone();
+                _tracker.Reset();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 押している間に呼ぶ(UI のスレッドから): 本当にまだ押されているか。
+    /// Ctrl+Alt+Del や画面ロックでキーを離したのが届かなかったときに終わらせる。
+    /// </summary>
+    public void CheckStillHeld()
+    {
+        lock (_gate)
+        {
+            if (!_tracker.Active || StillHeld()) return;
             _tracker.Reset();
+            EndSession();
         }
     }
 
     /// <summary>設定画面: 次に押したキーの組み合わせを記録する(その間はキーをアプリに渡さない)。</summary>
     public void Record(Action<Hotkey> done)
     {
-        _recorder = new HotkeyRecorder();
-        _recorded = done;
+        lock (_gate)
+        {
+            _recorder = new HotkeyRecorder();
+            _recorded = done;
+        }
     }
 
     public void CancelRecord()
     {
-        _recorder = null;
-        _recorded = null;
+        lock (_gate)
+        {
+            _recorder = null;
+            _recorded = null;
+        }
     }
 
     public bool Recording => _recorder != null;
@@ -187,8 +231,7 @@ public sealed class InputHook : IDisposable
 
     public void Dispose()
     {
-        if (_kb != IntPtr.Zero) Native.UnhookWindowsHookEx(_kb);
-        if (_mouse != IntPtr.Zero) Native.UnhookWindowsHookEx(_mouse);
-        _kb = _mouse = IntPtr.Zero;
+        if (_threadId != 0) Native.PostThreadMessage(_threadId, 0x0012 /* WM_QUIT */, IntPtr.Zero, IntPtr.Zero);
+        _thread.Join(1000);
     }
 }

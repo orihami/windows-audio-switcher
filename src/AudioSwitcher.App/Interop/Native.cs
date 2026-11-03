@@ -30,6 +30,19 @@ public static class Native
     [DllImport("user32.dll")]
     public static extern short GetAsyncKeyState(int vk);
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MSG { public IntPtr hwnd; public uint message; public IntPtr wParam, lParam; public uint time; public int ptX, ptY; }
+    [DllImport("user32.dll")]
+    public static extern int GetMessage(out MSG msg, IntPtr hwnd, uint min, uint max);
+    [DllImport("user32.dll")]
+    public static extern bool TranslateMessage(ref MSG msg);
+    [DllImport("user32.dll")]
+    public static extern IntPtr DispatchMessage(ref MSG msg);
+    [DllImport("user32.dll")]
+    public static extern bool PostThreadMessage(uint threadId, uint msg, IntPtr w, IntPtr l);
+    [DllImport("kernel32.dll")]
+    public static extern uint GetCurrentThreadId();
+
     [DllImport("user32.dll")]
     public static extern int GetWindowLong(IntPtr hwnd, int index);
     [DllImport("user32.dll")]

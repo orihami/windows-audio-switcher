@@ -104,6 +104,7 @@ public sealed class OverlayWindow : Window
             : s.Moved ? "今の出力先のままです"
             : "ホイールで選んで、キーを離すと切り替え";
         _footer.Foreground = target != null ? _p.AccentText : _p.SubText;
+        _footer.Visibility = Visibility.Visible;
         Present(set);
     }
 
@@ -116,6 +117,7 @@ public sealed class OverlayWindow : Window
         _rows.Children.Clear();
         _rows.Children.Add(Row(dev, kind, current: ok, selected: true));
         _footer.Text = "";
+        _footer.Visibility = Visibility.Collapsed;
         Present(set);
         StopHide();
         _hideTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(ok ? 900 : 1800) };

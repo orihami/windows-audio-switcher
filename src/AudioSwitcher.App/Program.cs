@@ -116,23 +116,39 @@ public sealed class Program : IAppHost
 
     // ---- ショートカット + ホイール ----
 
+    System.Windows.Threading.DispatcherTimer? _showTimer, _holdTimer;
+
     void OnActivated()
     {
         if (Settings.Paused) return;
         Refresh();
         _session = new SelectionSession(Settings.Devices, _currentId, Settings.Wrap);
-        _overlay.Render(_session, Settings, KindOf, Settings.Hotkey.ToString());
+        // ほかのショートカット(Ctrl+Alt+○○)で一瞬ちらつかないよう、少し待ってから出す。ホイールを回したらすぐ出す
+        _showTimer?.Stop();
+        _showTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
+        _showTimer.Tick += (_, _) =>
+        {
+            _showTimer?.Stop();
+            if (_session != null) _overlay.Render(_session, Settings, KindOf, Settings.Hotkey.ToString());
+        };
+        _showTimer.Start();
+        // 押しっぱなしの確認(離したのが届かなかったときのため)
+        _holdTimer ??= new System.Windows.Threading.DispatcherTimer(TimeSpan.FromMilliseconds(250), System.Windows.Threading.DispatcherPriority.Normal, (_, _) => _hook.CheckStillHeld(), _app.Dispatcher);
+        _holdTimer.Start();
     }
 
     void OnWheel(int steps)
     {
         if (_session == null) return;
+        _showTimer?.Stop();
         _session.Step(steps);
         _overlay.Render(_session, Settings, KindOf, Settings.Hotkey.ToString());
     }
 
     void OnReleased(bool cancelled)
     {
+        _showTimer?.Stop();
+        _holdTimer?.Stop();
         var s = _session;
         _session = null;
         if (s == null) return;

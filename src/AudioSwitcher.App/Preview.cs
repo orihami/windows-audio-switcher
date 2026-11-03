@@ -84,7 +84,7 @@ public static class Preview
             foreach (var page in new[] { "keys", "devices", "display", "app" })
             {
                 win.ShowPage(page);
-                Save(win.Content as FrameworkElement, Path.Combine(dir, $"settings-{page}-{tag}.png"), ((SolidColorBrush)Palette.Get(theme).Window).Color, 880, 760);
+                Save(win.Content as FrameworkElement, Path.Combine(dir, $"settings-{page}-{tag}.png"), ((SolidColorBrush)Palette.Get(theme).Window).Color, 880, page == "devices" ? 1060 : 760);
             }
         }
         Console.WriteLine("preview: " + string.Join(", ", Directory.GetFiles(dir, "*.png").Select(Path.GetFileName)));
@@ -109,12 +109,9 @@ public static class Preview
         const double scale = 1.5; // 高い解像度の画面のつもりで
         var bmp = new RenderTargetBitmap((int)(rw * scale), (int)(rh * scale), 96 * scale, 96 * scale, PixelFormats.Pbgra32);
         var dv = new DrawingVisual();
-        using (var dc = dv.RenderOpen())
-        {
-            dc.DrawRectangle(new SolidColorBrush(bg), null, new System.Windows.Rect(0, 0, rw, rh));
-            dc.DrawRectangle(new VisualBrush(el), null, new System.Windows.Rect(0, 0, rw, rh));
-        }
+        using (var dc = dv.RenderOpen()) dc.DrawRectangle(new SolidColorBrush(bg), null, new System.Windows.Rect(0, 0, rw, rh));
         bmp.Render(dv);
+        bmp.Render(el);
         var enc = new PngBitmapEncoder();
         enc.Frames.Add(BitmapFrame.Create(bmp));
         using (var f = File.Create(path)) enc.Save(f);
