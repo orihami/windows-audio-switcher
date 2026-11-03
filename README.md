@@ -4,6 +4,8 @@
 
 ショートカットキーを押したままマウスホイールを回して、Windows の音声の出力先(モニター・イヤホン・スピーカーなど)をすばやく切り替える常駐アプリです。
 
+**紹介動画(39秒)**: https://github.com/orihami/windows-audio-switcher/releases/latest/download/AudioSwitcher-intro.mp4
+
 ## 使い方
 
 1. `AudioSwitcher.exe` を起動します(インストールは不要。.NET を入れなくても動きます)。初めて起動すると、今つながっている出力デバイスが登録され、設定画面が開きます。
